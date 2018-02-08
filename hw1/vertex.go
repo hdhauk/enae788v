@@ -9,7 +9,7 @@ type Edge struct {
 type Vertex struct {
 	id        int
 	x, y      float64
-	parent    int
+	parent    *Vertex
 	distance  float64
 	finite    bool
 	neighbors map[int]float64

@@ -16,7 +16,7 @@ func TestReadProblems(t *testing.T) {
 }
 
 func TestReadNodes(t *testing.T) {
-	nodes, err := readNodes("./problems/nodes_1.txt")
+	nodes, err := readVertices("./problems/nodes_1.txt")
 	if err != nil {
 		t.Error(err)
 	}

@@ -13,11 +13,10 @@ import (
 )
 
 type problem struct {
-	id      int
-	nodes   []node
-	edges   []edge
-	startID int
-	goalID  int
+	id       int
+	vertices []*Vertex
+	startID  int
+	goalID   int
 }
 
 func readProblems(filePath string) ([]problem, error) {
@@ -34,7 +33,7 @@ func readProblems(filePath string) ([]problem, error) {
 	chunks := splitByEmptyNewline(string(dat))
 
 	problemIDRegex := regexp.MustCompile(`Problem\s(\d+):`)
-	nodeFileRegex := regexp.MustCompile(`node\sfile:\s*(.*)`)
+	vertexFileRegex := regexp.MustCompile(`node\sfile:\s*(.*)`)
 	edgeFileRegex := regexp.MustCompile(`edge\sfile:\s*(.*)`)
 	startIDRegex := regexp.MustCompile(`start\snode ID:\s*(\d*)`)
 	goalIDRegex := regexp.MustCompile(`goal\snode ID:\s*(\d*)`)
@@ -50,13 +49,13 @@ func readProblems(filePath string) ([]problem, error) {
 			log.Println("problem id must be an integer")
 		}
 
-		matches = nodeFileRegex.FindAllStringSubmatch(chunk, 1)
+		matches = vertexFileRegex.FindAllStringSubmatch(chunk, 1)
 		if len(matches) < 1 {
 			log.Println("could not find node file path")
 			continue
 		}
 		nodeFilePath := matches[0][1]
-		nodes, err := readNodes(dir + "/" + nodeFilePath)
+		vertices, err := readVertices(dir + "/" + nodeFilePath)
 		if err != nil {
 			log.Printf("failed to read nodes %v\n", err)
 			continue
@@ -73,6 +72,7 @@ func readProblems(filePath string) ([]problem, error) {
 			log.Printf("failed to read edges %v\n", err)
 			continue
 		}
+		addNeighborsToVertices(vertices, edges)
 
 		matches = startIDRegex.FindAllStringSubmatch(chunk, 1)
 		if len(matches) < 1 {
@@ -98,8 +98,6 @@ func readProblems(filePath string) ([]problem, error) {
 			id:      id,
 			startID: startID,
 			goalID:  goalID,
-			edges:   edges,
-			nodes:   nodes,
 		}
 		problems = append(problems, p)
 	}
@@ -111,12 +109,7 @@ func readProblems(filePath string) ([]problem, error) {
 	return problems, nil
 }
 
-type node struct {
-	id   int
-	x, y float64
-}
-
-func readNodes(filePath string) ([]node, error) {
+func readVertices(filePath string) ([]*Vertex, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not open file %s", filePath)
@@ -128,7 +121,7 @@ func readNodes(filePath string) ([]node, error) {
 
 	nodeRegex := regexp.MustCompile(`^(\d+),\s*(\d+.\d+),\s*(\d+.\d+)`)
 
-	var nodes []node
+	var vertices []*Vertex
 	for scanner.Scan() {
 		matches := nodeRegex.FindAllStringSubmatch(scanner.Text(), 1)
 		if len(matches) < 1 {
@@ -150,19 +143,35 @@ func readNodes(filePath string) ([]node, error) {
 			log.Println("failed to parse line")
 			continue
 		}
-		nodes = append(nodes, node{id, x, y})
+		v := &Vertex{
+			id:        id,
+			x:         x,
+			y:         y,
+			neighbors: make(map[int]float64),
+		}
+		vertices = append(vertices, v)
 	}
 
-	if len(nodes) < 1 {
-		return nil, errors.New("no nodes in file")
+	if len(vertices) < 1 {
+		return nil, errors.New("no vertices in file")
 	}
 
-	return nodes, nil
+	return vertices, nil
 }
 
 type edge struct {
 	tail, head int
 	distance   float64
+}
+
+func addNeighborsToVertices(vertices []*Vertex, edges []edge) {
+	for _, v := range vertices {
+		for _, e := range edges {
+			if e.tail == v.id {
+				v.neighbors[e.head] = e.distance
+			}
+		}
+	}
 }
 
 func readEdges(filePath string) ([]edge, error) {
