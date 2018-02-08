@@ -21,7 +21,7 @@ func (q *Queue) Less(i, j int) bool {
 	vi := q.vertices[i]
 	vj := q.vertices[j]
 	if vi.finite && vj.finite {
-		return vi.distance < vj.distance
+		return vi.priority < vj.priority
 	}
 	return true
 }
@@ -34,14 +34,28 @@ func (q *Queue) Swap(i, j int) {
 
 func (q *Queue) Push(x interface{}) {
 	v := x.(*Vertex)
-	_, alreadyInQ := q.inQueue[v]
-	if alreadyInQ {
+	if q.InQueue(v) {
 		return
 	}
 
 	n := len(q.vertices)
 	v.index = n
 	q.vertices = append(q.vertices, v)
+}
+
+func (q *Queue) PushVertex(v *Vertex) {
+	if q.InQueue(v) {
+		return
+	}
+	heap.Push(q, v)
+
+}
+
+func (q *Queue) PopVertex() *Vertex {
+	if len(q.vertices) == 0 {
+		return nil
+	}
+	return heap.Pop(q).(*Vertex)
 }
 
 func (q *Queue) Pop() interface{} {
@@ -55,7 +69,7 @@ func (q *Queue) Pop() interface{} {
 }
 
 // Updates the queue position of vertex v. If not in queue, do nothing
-func (q *Queue) Update(v *Vertex) {
+func (q *Queue) UpdateVertex(v *Vertex) {
 	if !q.InQueue(v) {
 		return
 	}
@@ -65,4 +79,11 @@ func (q *Queue) Update(v *Vertex) {
 func (q *Queue) InQueue(v *Vertex) bool {
 	_, alreadyInQ := q.inQueue[v]
 	return alreadyInQ
+}
+
+func (q *Queue) Peek() *Vertex {
+	if len(q.vertices) == 0 {
+		return nil
+	}
+	return q.vertices[0]
 }

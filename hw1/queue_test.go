@@ -22,19 +22,19 @@ func TestRandomQueue(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		v := &Vertex{
 			id:       i + 1,
-			distance: RandomFloat64(1, 1000),
+			priority: RandomFloat64(1, 1000),
 			finite:   true,
 		}
-		heap.Push(q, v)
+		q.PushVertex(v)
 	}
 
 	largest := 0.0
 	for len(q.vertices) > 0 {
 		v := heap.Pop(q).(*Vertex)
-		if v.distance < largest {
-			t.Errorf("v.distance smaller. Got %.4f, largest seen %.4f", v.distance, largest)
+		if v.priority < largest {
+			t.Errorf("v.distance smaller. Got %.4f, largest seen %.4f", v.priority, largest)
 		}
-		largest = v.distance
+		largest = v.priority
 	}
 }
 
@@ -45,7 +45,7 @@ func TestChangingQueue(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		v := &Vertex{
 			id:       i + 1,
-			distance: RandomFloat64(1, 10),
+			priority: RandomFloat64(1, 10),
 			finite:   true,
 		}
 		if i == 50 {
@@ -56,16 +56,16 @@ func TestChangingQueue(t *testing.T) {
 	}
 	magicNumber := 69.69
 	fmt.Println(u)
-	u.distance = magicNumber
+	u.priority = magicNumber
 	heap.Fix(q, u.index)
 
 	largest := 0.0
 	for len(q.vertices) > 0 {
 		v := heap.Pop(q).(*Vertex)
-		if v.distance < largest {
-			t.Errorf("v.distance smaller. Got %.4f, largest seen %.4f", v.distance, largest)
+		if v.priority < largest {
+			t.Errorf("v.distance smaller. Got %.4f, largest seen %.4f", v.priority, largest)
 		}
-		largest = v.distance
+		largest = v.priority
 	}
 	if largest != magicNumber {
 		t.Errorf("Expected largest distance to be &%.2f, but found %.4f", magicNumber, largest)

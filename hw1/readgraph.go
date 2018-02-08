@@ -14,12 +14,12 @@ import (
 
 type problem struct {
 	id       int
-	vertices []*Vertex
+	vertices map[int]*Vertex
 	startID  int
 	goalID   int
 }
 
-func readProblems(filePath string) ([]problem, error) {
+func readProblems(filePath string) ([]*problem, error) {
 	dat, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read file")
@@ -38,7 +38,7 @@ func readProblems(filePath string) ([]problem, error) {
 	startIDRegex := regexp.MustCompile(`start\snode ID:\s*(\d*)`)
 	goalIDRegex := regexp.MustCompile(`goal\snode ID:\s*(\d*)`)
 
-	var problems []problem
+	var problems []*problem
 	for _, chunk := range chunks {
 		matches := problemIDRegex.FindAllStringSubmatch(chunk, 1)
 		if len(matches) < 1 {
@@ -94,10 +94,11 @@ func readProblems(filePath string) ([]problem, error) {
 			log.Println("could not parse goal ID")
 		}
 
-		p := problem{
-			id:      id,
-			startID: startID,
-			goalID:  goalID,
+		p := &problem{
+			id:       id,
+			startID:  startID,
+			goalID:   goalID,
+			vertices: vertices,
 		}
 		problems = append(problems, p)
 	}
@@ -109,7 +110,7 @@ func readProblems(filePath string) ([]problem, error) {
 	return problems, nil
 }
 
-func readVertices(filePath string) ([]*Vertex, error) {
+func readVertices(filePath string) (map[int]*Vertex, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not open file %s", filePath)
@@ -121,7 +122,7 @@ func readVertices(filePath string) ([]*Vertex, error) {
 
 	nodeRegex := regexp.MustCompile(`^(\d+),\s*(\d+.\d+),\s*(\d+.\d+)`)
 
-	var vertices []*Vertex
+	vertices := make(map[int]*Vertex)
 	for scanner.Scan() {
 		matches := nodeRegex.FindAllStringSubmatch(scanner.Text(), 1)
 		if len(matches) < 1 {
@@ -149,13 +150,12 @@ func readVertices(filePath string) ([]*Vertex, error) {
 			y:         y,
 			neighbors: make(map[int]float64),
 		}
-		vertices = append(vertices, v)
+		vertices[id] = v
 	}
 
 	if len(vertices) < 1 {
 		return nil, errors.New("no vertices in file")
 	}
-
 	return vertices, nil
 }
 
@@ -164,7 +164,7 @@ type edge struct {
 	distance   float64
 }
 
-func addNeighborsToVertices(vertices []*Vertex, edges []edge) {
+func addNeighborsToVertices(vertices map[int]*Vertex, edges []edge) {
 	for _, v := range vertices {
 		for _, e := range edges {
 			if e.tail == v.id {
