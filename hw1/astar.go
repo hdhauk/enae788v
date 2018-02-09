@@ -60,7 +60,7 @@ mainLoop:
 
 	}
 	if !success {
-		return nil, errors.New("could not find goal")
+		return nil, errors.New("algorithm did not find the goal")
 	}
 
 	startToFinish, pathCost := reconstructPath(vertices[start], goalVertex)

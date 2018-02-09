@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -9,56 +10,38 @@ import (
 )
 
 func main() {
-	problemsPath := os.Args[1]
+	searchTreePath := flag.String("tree", "search_tree.txt", "path for search tree file")
+	shortestPathPath := flag.String("path", "output_path.txt", "path for shortest path path")
+	problemSet := flag.Int("problem", 1, "number identifier for problem set in provided problem file")
+	flag.Parse()
+
+	if len((os.Args)) < 2 {
+		fmt.Println("please provide a problem file")
+		return
+	}
+
+	log.SetFlags(log.Ltime | log.Lshortfile)
+
+	problemsPath := os.Args[len(os.Args)-1]
 
 	problems, err := readProblems(problemsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	p1 := problems[0]
-	// var h heuristic
-	// h = func(u, goal *Vertex) float64 { return 0.0 }
-	// results, err := aStar(p1.vertices, p1.startID, p1.goalID, h)
+	p1 := problems[*problemSet-1]
 	results, err := aStar(p1.vertices, p1.startID, p1.goalID, cartesianDistance)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := writeSearchTree("search_tree.txt", results.searchTree); err != nil {
+	if err := writeSearchTree(*searchTreePath, results.searchTree); err != nil {
 		log.Fatal(err)
 	}
 
-	if err := writePath("output_path.txt", results.path); err != nil {
+	if err := writePath(*shortestPathPath, results.path); err != nil {
 		log.Fatal(err)
 	}
-
-	// {
-	// 	file, err := os.OpenFile("search_tree.txt", os.O_RDWR, 0666)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	defer file.Close()
-
-	// 	for i := 1; i < len(results.searchTree); i++ {
-	// 		a := results.searchTree[i]
-	// 		fmt.Fprintf(file, "%d, %f, %f, %d, %f, %f\n", a.id, a.x, a.y, a.parent.id, a.parent.x, a.parent.y)
-	// 		// fmt.Printf("%3d: ID: %2d\n", k, v.id)
-	// 	}
-	// }
-	// {
-	// 	file, err := os.OpenFile("output_path.txt", os.O_RDWR, 0666)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	defer file.Close()
-
-	// 	for k, v := range results.path {
-	// 		fmt.Fprintf(file, "%d, %f, %f\n", v.id, v.x, v.y)
-	// 		fmt.Printf("%3d: ID: %2d\n", k, v.id)
-	// 	}
-	// }
-
 }
 
 func writeSearchTree(path string, tree []*Vertex) error {
