@@ -1,7 +1,7 @@
 # .goreleaser.yml
 # Build customization
 builds:
-  - main: main.go
+  - main: .
     binary: astar
     goos:
       - windows
