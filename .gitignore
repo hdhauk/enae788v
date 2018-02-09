@@ -1,2 +1,4 @@
-hw1/*.txt
+hw1/problems/search_tree*.txt
+hw1/problems/output_path*.txt
 astar
+dijkstra
