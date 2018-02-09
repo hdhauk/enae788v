@@ -3,3 +3,4 @@ hw1/problems/output_path*.txt
 hw1/dist/*
 astar
 dijkstra
+.goreleaser.yaml
