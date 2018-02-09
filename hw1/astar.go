@@ -1,14 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"math"
 
 	"github.com/pkg/errors"
 )
 
 type heuristic func(u, goal *Vertex) float64
 
-func aStar(vertices map[int]*Vertex, start, goal int, h heuristic) ([]*Vertex, error) {
+type searchResult struct {
+	path       []*Vertex
+	searchTree []*Vertex
+	pathCost   float64
+}
+
+func aStar(vertices map[int]*Vertex, start, goal int, h heuristic) (*searchResult, error) {
 	unvisited := make(map[int]bool)
 	for k := range vertices {
 		unvisited[k] = true
@@ -19,10 +25,13 @@ func aStar(vertices map[int]*Vertex, start, goal int, h heuristic) ([]*Vertex, e
 	Q.PushVertex(vertices[start])
 
 	goalVertex := vertices[goal]
+
+	searchTree := []*Vertex{}
 	var success bool
 mainLoop:
 	for Q.Peek() != nil {
 		v := Q.PopVertex()
+		searchTree = append(searchTree, v)
 
 		for neighID, d := range v.neighbors {
 			u := vertices[neighID]
@@ -36,10 +45,10 @@ mainLoop:
 				u.priority = u.costToStart + h(u, goalVertex)
 				if Q.InQueue(u) {
 					Q.UpdateVertex(u)
-					fmt.Printf("updating %v in queue \n", u.id)
+					// fmt.Printf("updating %v in queue \n", u.id)
 				} else {
 					Q.PushVertex(u)
-					fmt.Printf("pushing %v onto queue \n", u.id)
+					// fmt.Printf("pushing %v onto queue \n", u.id)
 				}
 			}
 			if v.id == goal {
@@ -54,11 +63,18 @@ mainLoop:
 		return nil, errors.New("could not find goal")
 	}
 
-	startToFinish := reconstructPath(vertices[start], goalVertex)
-	return startToFinish, nil
+	startToFinish, pathCost := reconstructPath(vertices[start], goalVertex)
+
+	results := &searchResult{
+		path:       startToFinish,
+		pathCost:   pathCost,
+		searchTree: searchTree,
+	}
+
+	return results, nil
 }
 
-func reconstructPath(start, goal *Vertex) []*Vertex {
+func reconstructPath(start, goal *Vertex) ([]*Vertex, float64) {
 	// Walk backword along parent pointers
 	path := []*Vertex{goal}
 	next := goal.parent
@@ -73,5 +89,10 @@ func reconstructPath(start, goal *Vertex) []*Vertex {
 	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
 		path[i], path[j] = path[j], path[i]
 	}
-	return path
+	return path, goal.costToStart
+}
+
+func cartesianDistance(u, goal *Vertex) float64 {
+	dist := math.Sqrt(math.Pow(goal.x-u.x, 2) + math.Pow(goal.y-u.y, 2))
+	return dist
 }
