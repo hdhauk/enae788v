@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 )
 
@@ -13,6 +14,7 @@ func main() {
 	searchTreePath := flag.String("tree", "search_tree.txt", "path for search tree file")
 	shortestPathPath := flag.String("path", "output_path.txt", "path for shortest path path")
 	problemSet := flag.Int("problem", 1, "number identifier for problem set in provided problem file")
+	dijkstra := flag.Bool("dijk", false, "set this flag to not set heuristic return 0, effectively rendering the algorithm equal to Dijkstra")
 	flag.Parse()
 
 	if len((os.Args)) < 2 {
@@ -30,9 +32,18 @@ func main() {
 	}
 
 	p1 := problems[*problemSet-1]
-	results, err := aStar(p1.vertices, p1.startID, p1.goalID, cartesianDistance)
+	h := cartesianDistance
+	if *dijkstra {
+		h = func(u, goal *Vertex) float64 { return 0.0 }
+	}
+	results, err := aStar(p1.vertices, p1.startID, p1.goalID, h)
 	if err != nil {
-		log.Fatal(err)
+		red := color.New(color.FgRed).FprintfFunc()
+		red(os.Stderr, "%s", err)
+		if err := writeSearchTree(*searchTreePath, results.searchTree); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
 	if err := writeSearchTree(*searchTreePath, results.searchTree); err != nil {

@@ -35,6 +35,10 @@ start node ID: 52
 goal node ID: 1
 
 
-
+Problem 6:
+node file: nodes_5.txt
+edge file: edges_5.txt
+start node ID: 6
+goal node ID: 7
 
 

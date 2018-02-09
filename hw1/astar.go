@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/pkg/errors"
@@ -26,6 +27,9 @@ func aStar(vertices map[int]*Vertex, start, goal int, h heuristic) (*searchResul
 
 	goalVertex := vertices[goal]
 
+	fmt.Printf("%f,%f\n", vertices[start].x, vertices[start].y)
+	fmt.Printf("%f,%f\n", vertices[goal].x, vertices[goal].y)
+
 	searchTree := []*Vertex{}
 	var success bool
 mainLoop:
@@ -45,10 +49,8 @@ mainLoop:
 				u.priority = u.costToStart + h(u, goalVertex)
 				if Q.InQueue(u) {
 					Q.UpdateVertex(u)
-					// fmt.Printf("updating %v in queue \n", u.id)
 				} else {
 					Q.PushVertex(u)
-					// fmt.Printf("pushing %v onto queue \n", u.id)
 				}
 			}
 			if v.id == goal {
@@ -60,7 +62,8 @@ mainLoop:
 
 	}
 	if !success {
-		return nil, errors.New("algorithm did not find the goal")
+		res := &searchResult{searchTree: searchTree}
+		return res, errors.New("algorithm did not find the goal")
 	}
 
 	startToFinish, pathCost := reconstructPath(vertices[start], goalVertex)
