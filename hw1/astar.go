@@ -26,7 +26,7 @@ func aStar(vertices map[int]*Vertex, start, goal int, h heuristic) (*searchResul
 	Q.PushVertex(vertices[start])
 
 	goalVertex := vertices[goal]
-
+	fmt.Println("Start & Goal coordinates:")
 	fmt.Printf("%f,%f\n", vertices[start].x, vertices[start].y)
 	fmt.Printf("%f,%f\n", vertices[goal].x, vertices[goal].y)
 

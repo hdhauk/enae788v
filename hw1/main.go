@@ -15,6 +15,7 @@ func main() {
 	shortestPathPath := flag.String("path", "output_path.txt", "path for shortest path path")
 	problemSet := flag.Int("problem", 1, "number identifier for problem set in provided problem file")
 	dijkstra := flag.Bool("dijk", false, "set this flag to not set heuristic return 0, effectively rendering the algorithm equal to Dijkstra")
+	silent := flag.Bool("silent", false, "turn for file outputs, will still report length of shortest path")
 	help := flag.Bool("h", false, "show help")
 	flag.Parse()
 
@@ -47,12 +48,21 @@ func main() {
 	if err != nil {
 		red := color.New(color.FgRed).FprintfFunc()
 		red(os.Stderr, "%s", err)
+		if *silent {
+			return
+		}
 		if err := writeSearchTree(*searchTreePath, results.searchTree); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
 
+	green := color.New(color.FgGreen).PrintfFunc()
+	green("Found shortest path with distance %.3f\n", results.pathCost)
+
+	if *silent {
+		return
+	}
 	if err := writeSearchTree(*searchTreePath, results.searchTree); err != nil {
 		log.Fatal(err)
 	}
@@ -99,5 +109,6 @@ func printHelp() {
 -h                 show help
 -path     string   path for shortest path path (default "output_path.txt")
 -problem  int      number identifier for problem set in provided problem file (default 1)
--tree     string   path for search tree file (default "search_tree.txt")`)
+-tree     string   path for search tree file (default "search_tree.txt")
+-silent            turn for file outputs, will still report length of shortest path`)
 }

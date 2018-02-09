@@ -1,4 +1,5 @@
 hw1/problems/search_tree*.txt
 hw1/problems/output_path*.txt
+hw1/dist/*
 astar
 dijkstra
