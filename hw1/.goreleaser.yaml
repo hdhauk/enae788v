@@ -11,7 +11,10 @@ builds:
       - amd64
 # Archive customization
 archive:
+  name_template: hw1_astar_{{.Os}}_{{.Arch}}
   format: tar.gz
   replacements:
     amd64: 64-bit
     darwin: macOS
+  files:
+    - problems/solved_graph*.pdf
