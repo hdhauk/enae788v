@@ -84,6 +84,7 @@ func reconstructPath(start, goal *Vertex) ([]*Vertex, float64) {
 		current = next
 		next = current.parent
 	}
+	path = append(path, next)
 
 	// Reverse slice
 	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
