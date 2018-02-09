@@ -15,10 +15,17 @@ func main() {
 	shortestPathPath := flag.String("path", "output_path.txt", "path for shortest path path")
 	problemSet := flag.Int("problem", 1, "number identifier for problem set in provided problem file")
 	dijkstra := flag.Bool("dijk", false, "set this flag to not set heuristic return 0, effectively rendering the algorithm equal to Dijkstra")
+	help := flag.Bool("h", false, "show help")
 	flag.Parse()
+
+	if *help {
+		printHelp()
+		return
+	}
 
 	if len((os.Args)) < 2 {
 		fmt.Println("please provide a problem file")
+		printHelp()
 		return
 	}
 
@@ -85,4 +92,12 @@ func writePath(filePath string, path []*Vertex) error {
 	}
 
 	return nil
+}
+
+func printHelp() {
+	fmt.Print(`-dijk              set this flag to not set heuristic return 0, effectively rendering the algorithm equal to Dijkstra
+-h                 show help
+-path     string   path for shortest path path (default "output_path.txt")
+-problem  int      number identifier for problem set in provided problem file (default 1)
+-tree     string   path for search tree file (default "search_tree.txt")`)
 }
