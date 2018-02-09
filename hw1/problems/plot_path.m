@@ -22,11 +22,13 @@
 % this will display the search tree and path
 % assuming that the files have been generated
 clc; close all; clear
-p = '1';
-search_tree_raw = csvread(strcat('search_tree',p,'.txt'));
-path_raw = csvread(strcat('output_path',p,'.txt'));
-nodes_raw = csvread(strcat('nodes_',p,'.txt'));
-edges_raw = csvread(strcat('edges_' ,p,'.txt'));
+p = '3';
+g = '3';
+dijk = 'dijkstra';
+search_tree_raw = csvread(strcat('search_tree',p,dijk,'.txt'));
+%path_raw = csvread(strcat('output_path',p,dijk,'.txt'));
+nodes_raw = csvread(strcat('nodes_',g,'.txt'));
+edges_raw = csvread(strcat('edges_' ,g,'.txt'));
 start_goal = csvread(strcat('start_goal' ,p,'.txt'));
 
 % a bit of data processing for faster plotting
@@ -54,8 +56,8 @@ hold on
 plot(nodes(:,1), nodes(:,2), 'ok')
 plot(edges(:,1), edges(:,2), 'k')
 plot(search_tree(:, 1), search_tree(:, 2), 'm', 'LineWidth', 2);
-plot(path_raw(:,2), path_raw(:,3), 'b', 'LineWidth', 3);
+%plot(path_raw(:,2), path_raw(:,3), 'b', 'LineWidth', 3);
 plot(start_goal(1,1), start_goal(1,2),'or', 'LineWidth', 5);
 plot(start_goal(2,1), start_goal(2,2),'og', 'LineWidth', 5);
 hold off
-print(strcat('solved_graph_',p,'.pdf'),'-dpdf');
+print(strcat('solved_graph_',p,dijk,'.pdf'),'-dpdf');
