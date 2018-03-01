@@ -4,3 +4,4 @@ hw1/dist/*
 astar
 dijkstra
 .goreleaser.yaml
+.DS_Store
