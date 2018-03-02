@@ -1,40 +1,76 @@
 package main
 
 import (
-	"encoding/csv"
-	"io"
+	"flag"
+	"fmt"
 	"log"
-	"strconv"
-
-	"github.com/pkg/errors"
+	"os"
 )
 
 func main() {
+	configPath := flag.String("-c", "problems.json", "config file")
+	problem := flag.Int("-p", 0, "which problem in config file to solve (0-indexed)")
 
-}
-
-type obstacle struct {
-	x, y, radius int
-}
-
-func readObstacles(reader io.Reader) ([]obstacle, error) {
-	r := csv.NewReader(reader)
-	d, err := r.ReadAll()
+	configFile, err := os.Open(*configPath)
+	defer configFile.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not open config file: %v", err)
 	}
 
-	var obstacles []obstacle
-	for _, v := range d {
-		x, err := strconv.Atoi(v[0])
-		y, err := strconv.Atoi(v[1])
-		r, err := strconv.Atoi(v[2])
-		if err != nil {
-			return nil, errors.Wrap(err, "non-integer value")
+	config, err := parseConfig(configFile)
+	if err != nil {
+		log.Fatalf("could not parse config file: %v", err)
+	}
+
+	obstacleFile, err := os.Open(config.ObstaclesPath)
+	if err != nil {
+		log.Fatalf("could not open obstacle file: %v", err)
+	}
+	defer obstacleFile.Close()
+	obstacles, err := readObstacles(obstacleFile)
+	if err != nil {
+		log.Fatalf("could not read obstacles from file: %v", err)
+	}
+
+	fmt.Println(obstacles)
+	fmt.Println(*problem)
+	fmt.Printf("%+v\n", config)
+
+}
+
+// SafeFunc takes to points and return true if the the edge is safe.
+type SafeFunc func(v, w Point) bool
+
+// Edge define an edge between two vertices.
+type Edge struct {
+	head, tail Point
+}
+
+// RRT build a tree and find a feasible path using the RRT algorithm.
+func RRT(obstacles []Circle, start Point, goal Circle, epsilon float64, safe SafeFunc) (path, tree []Edge, err error) {
+
+	vertices := []Point{start}
+	edges := []Edge
+
+	var u,v,w Point
+	for {
+		u = randomSample()
+		v = closestMember(u)
+		w = smallDistanceAlong(u,v)
+
+		if safe(u,w){
+			vertices = append(vertices, w)
+			edges = append(edges, NewEdge(v,w))
 		}
 
-		obstacles = append(obstacles, obstacle{x, y, r})
+		if near(w,goal, epsilon){
+			break
+		}
 	}
 
-	return obstacles, nil
+	path = backtrack(w, start, edges)
+
+
+
+	return nil, nil, nil
 }

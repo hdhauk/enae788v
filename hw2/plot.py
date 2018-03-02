@@ -93,7 +93,6 @@ for v in tree:
 
 # Path
 for p in path:
-    print(p[0], p[1])
     plt.plot(p[0], p[1], color='r', marker='o')
 
 plt.show()
