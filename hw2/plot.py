@@ -99,5 +99,6 @@ for v in tree:
 for p in path:
     plt.plot(p[0], p[1], color='r', marker='o')
 
+plt.grid()
 ax.set_aspect('equal')
 plt.show()
