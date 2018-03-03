@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"time"
 
 	"github.com/ungerik/go3d/float64/vec2"
 )
@@ -41,17 +42,9 @@ func main() {
 		log.Fatalf("could not read obstacles from file: %v\n", err)
 	}
 
-	safe := func(v, w *Vertex) bool {
-		for _, o := range obstacles {
-			if near(w, o) {
-				return false
-			}
-		}
-		return true
-	}
-
 	p := config.Problems[*pIndex]
-	seed := int64(69) // time.Now().UnixNano()
+	safe := getSafeFunc(obstacles, config.ConfigSpace)
+	seed := time.Now().UnixNano()
 	path, tree, err := RRT(obstacles, p, config.ConfigSpace, safe, seed)
 	if err != nil {
 		log.Fatalf("RRT failed during execution: %v\n", err)
@@ -64,7 +57,8 @@ func main() {
 	for _, v := range path {
 		fmt.Printf("%.4f, %.4f, %.4f, %.4f\n", v.head.X, v.head.Y, v.tail.X, v.tail.Y)
 	}
-	fmt.Println("END_PATH\n")
+	fmt.Println("END_PATH")
+	fmt.Println()
 
 	fmt.Println("START_TREE")
 	for _, v := range tree {
@@ -76,6 +70,48 @@ func main() {
 // SafeFunc takes to points and return true if the the edge is safe.
 type SafeFunc func(v, w *Vertex) bool
 
+func getSafeFunc(obstacles []Circle, cSpace ConfigSpace) SafeFunc {
+	return func(v, w *Vertex) bool {
+		a := &vec2.T{w.X - v.X, w.Y - v.Y}
+		aNorm := a.Normalized()
+		for _, o := range obstacles {
+			// If w inside an obstacle no need to check further.
+			if near(w, o) {
+				return false
+			}
+
+			inConfigSpace := (cSpace.XMin < w.X && w.X < cSpace.XMax) && (cSpace.YMin < w.Y && w.Y < cSpace.YMax)
+			if !inConfigSpace {
+				return false
+			}
+
+			// https://stackoverflow.com/a/1079478/7035436
+			b := &vec2.T{o.X - v.X, o.Y - v.Y}
+			theta := vec2.Angle(a, b)
+			lengthC := b.Length() * math.Cos(theta)
+			c := aNorm
+			c.Scale(lengthC)
+			d := c
+			d.Sub(b)
+
+			if d.Length() < o.R && c.Length() < a.Length() {
+				return false
+			}
+
+			if c.Length() < a.Length() {
+				e := *a
+				e.Sub(b)
+
+				if e.Length() < o.R {
+					return false
+				}
+			}
+
+		}
+		return true
+	}
+}
+
 // Edge define an edge between two vertices.
 type Edge struct {
 	head, tail *Vertex
@@ -85,6 +121,10 @@ type Edge struct {
 type Vertex struct {
 	Point
 	Parent *Vertex
+}
+
+func (v Vertex) String() string {
+	return fmt.Sprintf("(%.2f, %.2f)", v.X, v.Y)
 }
 
 // LinkParent links the parent pointer to the parent vertex.
@@ -138,10 +178,8 @@ func distance(a, b *Vertex) float64 {
 // closestMember naively searches for the member in vertices closest to vertex u.
 // Runtime: O(n) where n are number of vertices in list.
 func closestMember(vertices []*Vertex, u *Vertex) *Vertex {
-	// bestVertex := 100000
-	// bestDistance := distance(u, vertices[0])
 	var closest *Vertex
-	shortest := 1000000.0
+	shortest := math.MaxFloat64
 	for _, v := range vertices {
 		d := distance(u, v)
 		if d < shortest {
