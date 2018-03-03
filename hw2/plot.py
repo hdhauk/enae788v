@@ -20,12 +20,11 @@ stdin = sys.stdin
 
 # read start / goal coordinates
 match = re.search(
-    '^start=\[(\d+\.\d+),\s*(\d+\.\d+)\]\s*end=\[(\d+\.\d+),\s*(\d+\.\d+)\]',
+    '^start=\[(\d+\.\d+),\s*(\d+\.\d+)\]\s*goal=\[(\d+\.\d+),\s*(\d+\.\d+),\s*(\d+\.\d+)\]',
     stdin.readline())
 start = (float(match.group(1)), float(match.group(2)))
-goal = (float(match.group(3)), float(match.group(4)))
-print(start)
-print(goal)
+goal = (float(match.group(3)), float(match.group(4)), float(match.group(5)))
+
 
 # Print any output before START_PATH
 line = stdin.readline()
@@ -34,13 +33,12 @@ while line != "START_PATH\n":
         print(line)
     line = stdin.readline()
 
+edge_regex = """(-*\d+\.\d+)\s*,\s*(-*\d+\.\d+)\s*,\s*(-*\d+\.\d+)\s*,\s*(-*\d+\.\d+)"""
 # Save path
 line = stdin.readline()
 path = []
 while line != "END_PATH\n":
-    match = re.search(
-        '(\d+\.\d+)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)',
-        line)
+    match = re.search(edge_regex, line)
     x1, y1, = float(match.group(1)), float(match.group(3))
     x2, y2, = float(match.group(2)), float(match.group(4))
     path.append(((x1, y1), (x2, y2)))
@@ -57,9 +55,7 @@ while line != "START_TREE\n":
 tree = []
 line = stdin.readline()
 while line != "END_TREE\n":
-    match = re.search(
-        '(\d+\.\d+)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)',
-        line)
+    match = re.search(edge_regex, line)
     x1, y1, = float(match.group(1)), float(match.group(3))
     x2, y2, = float(match.group(2)), float(match.group(4))
     tree.append(((x1, y1), (x2, y2)))
@@ -67,7 +63,8 @@ while line != "END_TREE\n":
 
 # Print any output after END_TREE
 for l in stdin:
-    print(l)
+    if l != "":
+        print(l)
 
 # Read in obstacles
 obstacle_file = open(args.obstacles)
@@ -83,6 +80,13 @@ obstacle_file.close()
 fig, ax = plt.subplots()
 ax.set_xlim(0, 100)
 ax.set_ylim(0, 100)
+
+# Start/goal
+ax.add_artist(plt.Circle((start[0], start[1]), zorder=10,
+                         radius=1.2, color='g', fill=True))
+ax.add_artist(plt.Circle((goal[0], goal[1]), radius=goal[2], color='g'))
+
+
 # Obstacles
 for o in obstacles:
     ax.add_artist(plt.Circle((o[0], o[1]), radius=o[2]))
@@ -95,4 +99,5 @@ for v in tree:
 for p in path:
     plt.plot(p[0], p[1], color='r', marker='o')
 
+ax.set_aspect('equal')
 plt.show()

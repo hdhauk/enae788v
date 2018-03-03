@@ -11,10 +11,10 @@ func TestRandomSample(t *testing.T) {
 	rand.Seed(69)
 	cSpace := ConfigSpace{0, 100, 0, 100}
 
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 1000; i++ {
 		p := randomSample(cSpace)
-		assert(t, p.X > 0.0 || p.X < 100.0, "point outside of range")
-		assert(t, p.Y > 0.0 || p.Y < 100.0, "point outside of range")
+		assert(t, p.X > 0.0 && p.X < 100.0, "point outside of range")
+		assert(t, p.Y > 0.0 && p.Y < 100.0, "point outside of range")
 	}
 }
 
