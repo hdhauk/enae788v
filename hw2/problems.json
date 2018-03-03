@@ -9,6 +9,18 @@
     "problems": [
         {
             "start": {
+                "x": 1,
+                "y": 99
+            },
+            "goal_region": {
+                "x": 100,
+                "y": 0,
+                "r": 20
+            },
+            "epsilon": 20
+        },
+        {
+            "start": {
                 "x": 75,
                 "y": 85
             },
@@ -66,6 +78,19 @@
                 "r": 20
             },
             "epsilon": 1
+        },
+        {
+            "start": {
+                "x": 60,
+                "y": 60
+            },
+            "goal_region": {
+                "x": 75,
+                "y": 85,
+                "r": 10
+            },
+            "epsilon": 13,
+            "allow_steps_smaller_than_epsilon": true
         }
     ]
 }
