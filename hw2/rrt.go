@@ -102,11 +102,11 @@ func RRT(obstacles []Circle, prob Problem, cSpace ConfigSpace, safe SafeFunc, se
 	for {
 		u = randomSample(cSpace)
 		v = closestMember(vertices, u)
-		w = smallDistanceAlong(v, u, prob.Epsilon)
+		w = smallDistanceAlong(v, u, prob.Epsilon, prob.AllowSmallSteps)
 		w.LinkParent(v)
 
 		// Discard vertex w if edge vw is unsafe.
-		if !safe(u, w) {
+		if !safe(v, w) {
 			continue
 		}
 
@@ -149,14 +149,18 @@ func closestMember(vertices []*Vertex, u *Vertex) *Vertex {
 			shortest = d
 		}
 	}
-	fmt.Fprintf(os.Stderr, "closest distance = %.2f\n", shortest)
 	return closest
 }
 
 // smallDistanceAlong generate an edge between u and v, and returns a new vertex w
 // epsilon distance from u along the uv-edge.
-func smallDistanceAlong(u, v *Vertex, epsilon float64) *Vertex {
+func smallDistanceAlong(u, v *Vertex, epsilon float64, smallSteps bool) *Vertex {
 	u2v := vec2.T{v.X - u.X, v.Y - u.Y}
+
+	if smallSteps && u2v.Length() < epsilon {
+		return v
+	}
+
 	u2vNorm := u2v.Normalize()
 	wVec := u2vNorm.Scale(epsilon)
 	x := u.X + wVec[0]

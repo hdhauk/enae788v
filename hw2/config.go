@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -14,14 +15,19 @@ type Circle struct {
 	X, Y, R float64
 }
 
+func (c Circle) String() string {
+	return fmt.Sprintf("(%.2f, %.2f, r=%.2f)", c.X, c.Y, c.R)
+}
+
 type Point struct {
 	X, Y float64
 }
 
 type Problem struct {
-	Start   Point
-	Goal    Circle `json:"goal_region"`
-	Epsilon float64
+	Start           Point
+	Goal            Circle `json:"goal_region"`
+	Epsilon         float64
+	AllowSmallSteps bool `json:"allow_steps_smaller_than_epsilon"`
 }
 type ConfigSpace struct {
 	XMin float64 `json:"x_min"`
