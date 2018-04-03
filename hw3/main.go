@@ -134,12 +134,36 @@ func getPointsAlongPath(start, end Point, epsilon float64) []Point {
 	distance := a2b.Length()
 	numPoints := math.Floor(distance / epsilon)
 
+	diffTheta, dir := angleDiff(start.Theta, end.Theta)
+	deltaTheta := diffTheta / (numPoints - 1)
+
 	pointsAlong := []Point{Point{a[0], a[1], a2b.Angle()}}
 	for i := 0.0; i < numPoints; i++ {
 		offset := a2bNorm.Scaled(epsilon)
 		waypoint := a.Add(&offset)
-		pointsAlong = append(pointsAlong, Point{waypoint[0], waypoint[1], a2b.Angle()})
+		theta := start.Theta + deltaTheta*dir*i
+		pointsAlong = append(pointsAlong, Point{waypoint[0], waypoint[1], theta})
 	}
 
 	return pointsAlong
+}
+
+// angleDiff returns the absolute value of the difference in angle, and if that is in
+// positive or negative direction.
+func angleDiff(start, end float64) (float64, float64) {
+	mod := func(a, n int) int {
+		return a - int(math.Floor(float64(a/n)))*n
+	}
+
+	// use degrees
+	angleDiff := int(math.Round(end*180/math.Pi - start*180/math.Pi))
+	angleDiff = mod(angleDiff+180, 360) - 180
+	angleDiff64 := float64(angleDiff)
+	angleDiffRad := angleDiff64 * math.Pi / 180.0
+
+	if angleDiffRad < 0 {
+		return math.Abs(angleDiffRad), -1.0
+
+	}
+	return math.Abs(angleDiffRad), 1.0
 }

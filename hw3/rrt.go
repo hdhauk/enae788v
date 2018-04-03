@@ -66,7 +66,8 @@ func RRT(obstacles []Circle, prob Problem, cSpace ConfigSpace, safe SafeFunc, se
 func randomSample(c ConfigSpace) *Vertex {
 	x := c.XMin + rand.Float64()*(c.XMax-c.XMin)
 	y := c.YMin + rand.Float64()*(c.YMax-c.YMin)
-	return newVertex(x, y, 0, nil)
+	theta := -math.Pi + rand.Float64()*(2*math.Pi)
+	return newVertex(x, y, theta, nil)
 }
 
 // distance returns the cartesian distance between two vertices.
@@ -102,7 +103,9 @@ func smallDistanceAlong(u, v *Vertex, epsilon float64, smallSteps bool) *Vertex 
 	wVec := u2vNorm.Scale(epsilon)
 	x := u.X + wVec[0]
 	y := u.Y + wVec[1]
-	theta := wVec.Angle()
+	// theta := wVec.Angle()
+	theta := v.Theta
+
 	return newVertex(x, y, theta, u)
 }
 

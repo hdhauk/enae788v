@@ -57,6 +57,16 @@ func TestPointsAlongPath(t *testing.T) {
 				Point{2.5, 0, 0},
 			},
 		},
+		{"horizontal_line_different_angles", Point{0, 0, math.Pi / 2}, Point{2.5, 0, -math.Pi / 2}, 0.5,
+			[]Point{
+				Point{0, 0, 0},
+				Point{0.5, 0, 0},
+				Point{1, 0, 0},
+				Point{1.5, 0, 0},
+				Point{2.0, 0, 0},
+				Point{2.5, 0, 0},
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -64,9 +74,34 @@ func TestPointsAlongPath(t *testing.T) {
 			got := getPointsAlongPath(tc.start, tc.end, tc.epsilon)
 			equals(t, len(tc.exp), len(got))
 			for i := 0; i < len(got); i++ {
-				equals(t, tc.exp[i], got[i])
+				equals(t, tc.exp[i].X, got[i].X)
+				equals(t, tc.exp[i].Y, got[i].Y)
 			}
 		})
 	}
 
+}
+
+func TestAngleDiff(t *testing.T) {
+	var tests = []struct {
+		name     string
+		start    float64
+		end      float64
+		expAngle float64
+		expDir   float64
+	}{
+		{"90 degree", 0, math.Pi / 2, math.Pi / 2, 1},
+		{"-90 degree", 0, -math.Pi / 2, math.Pi / 2, -1},
+		{"-90 degree, 45 to neg45", math.Pi / 4, -math.Pi / 4, math.Pi / 2, -1},
+		{"-90 degree, 45 to 45", -math.Pi / 4, math.Pi / 4, math.Pi / 2, 1},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			angle, dir := angleDiff(tc.start, tc.end)
+			equals(t, tc.expAngle, angle)
+			equals(t, tc.expDir, dir)
+
+		})
+	}
 }

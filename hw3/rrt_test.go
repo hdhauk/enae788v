@@ -22,12 +22,12 @@ func TestSmallDistanceAlong(t *testing.T) {
 	// Pure y-direction
 	a, b := newVertex(0, 0, 0, nil), newVertex(0, 10, 0, nil)
 	c := smallDistanceAlong(a, b, 1, false)
-	equals(t, newVertex(0, 1, math.Pi/2, a), c)
+	equals(t, newVertex(0, 1, a.Theta, a), c)
 
 	// Pure x-direction
 	a, b = newVertex(0, 0, 0, nil), newVertex(100, 0, 0, nil)
 	c = smallDistanceAlong(a, b, 50, false)
-	equals(t, newVertex(50, 0, 0, a), c)
+	equals(t, newVertex(50, 0, a.Theta, a), c)
 
 	// Pure 45-direction
 	a, b = newVertex(0, 0, 0, nil), newVertex(100, 100, 0, nil)
