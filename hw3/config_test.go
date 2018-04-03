@@ -39,10 +39,12 @@ func equals(tb testing.TB, exp, act interface{}) {
 func TestParseConfig(t *testing.T) {
 	want := Config{
 		ObstaclesPath: "obstacles.txt",
+		RobotPath:     "H3_robot.txt",
 		ConfigSpace:   ConfigSpace{0, 100.0, 0, 100.0},
 		Problems: []Problem{
 			Problem{
-				Start:   Point{75.0, 85.0},
+				Name:    "custom test",
+				Start:   Point{X: 75.0, Y: 85.0, Theta: 3},
 				Goal:    Circle{100.0, 0.0, 20.0},
 				Epsilon: 10,
 			},
@@ -51,6 +53,7 @@ func TestParseConfig(t *testing.T) {
 
 	s := strings.NewReader(`{
 		"obstacles": "obstacles.txt",
+		"robot_path": "H3_robot.txt",
 		"config_space": {
 			"x_min": 0,
 			"x_max": 100,
@@ -59,9 +62,11 @@ func TestParseConfig(t *testing.T) {
 		},
 	
 		"problems": [{
+			"name": "custom test",
 			"start": {
                 "x": 75,
-                "y": 85
+				"y": 85,
+				"theta":3
             },
             "goal_region": {
                 "x": 100,
@@ -87,5 +92,24 @@ func TestReadObstacles(t *testing.T) {
 
 	_, err = readObstacles(file)
 	ok(t, err)
+
+}
+
+func TestReadRobot(t *testing.T) {
+	var want Robot
+	want = []Point{
+		Point{X: 1, Y: 2},
+		Point{X: 3, Y: 4},
+		Point{X: -5.3, Y: 6},
+		Point{X: 7, Y: 8},
+	}
+
+	s := strings.NewReader(`1.0, 2.0
+		3.0, 4.0
+		-5.3, 6.0
+		7.0, 8.0`)
+	bot, err := readRobot(s)
+	ok(t, err)
+	equals(t, want, bot)
 
 }

@@ -1,116 +1,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
-	"os"
-	"time"
 
 	"github.com/ungerik/go3d/float64/vec2"
 )
 
-func main() {
-	configPath := flag.String("c", "problems.json", "config file")
-	pIndex := flag.Int("p", 0, "which problem in config file to solve (0-indexed)")
-	flag.Parse()
-
-	configFile, err := os.Open(*configPath)
-	defer configFile.Close()
-	if err != nil {
-		log.Fatalf("could not open config file: %v\n", err)
-	}
-
-	config, err := parseConfig(configFile)
-	if err != nil {
-		log.Fatalf("could not parse config file: %v\n", err)
-	}
-
-	if len(config.Problems)-1 < *pIndex || *pIndex < 0 {
-		log.Fatalln("invalid problem number")
-	}
-
-	obstacleFile, err := os.Open(config.ObstaclesPath)
-	if err != nil {
-		log.Fatalf("could not open obstacle file: %v\n", err)
-	}
-	defer obstacleFile.Close()
-	obstacles, err := readObstacles(obstacleFile)
-	if err != nil {
-		log.Fatalf("could not read obstacles from file: %v\n", err)
-	}
-
-	p := config.Problems[*pIndex]
-	safe := getSafeFunc(obstacles, config.ConfigSpace)
-	seed := time.Now().UnixNano()
-	path, tree, err := RRT(obstacles, p, config.ConfigSpace, safe, seed)
-	if err != nil {
-		log.Fatalf("RRT failed during execution: %v\n", err)
-	}
-
-	// printing
-	fmt.Printf("start=[%.4f,%.4f] goal=[%.4f,%.4f,%.4f]\n\n", p.Start.X, p.Start.Y, p.Goal.X, p.Goal.Y, p.Goal.R)
-
-	fmt.Println("START_PATH")
-	for _, v := range path {
-		fmt.Printf("%.4f, %.4f, %.4f, %.4f\n", v.head.X, v.head.Y, v.tail.X, v.tail.Y)
-	}
-	fmt.Println("END_PATH")
-	fmt.Println()
-
-	fmt.Println("START_TREE")
-	for _, v := range tree {
-		fmt.Printf("%.4f, %.4f, %.4f, %.4f\n", v.head.X, v.head.Y, v.tail.X, v.tail.Y)
-	}
-	fmt.Println("END_TREE")
-}
-
 // SafeFunc takes to points and return true if the the edge is safe.
 type SafeFunc func(v, w *Vertex) bool
-
-func getSafeFunc(obstacles []Circle, cSpace ConfigSpace) SafeFunc {
-	return func(v, w *Vertex) bool {
-		a := &vec2.T{w.X - v.X, w.Y - v.Y}
-		aNorm := a.Normalized()
-		for _, o := range obstacles {
-			// If w inside an obstacle no need to check further.
-			if near(w, o) {
-				return false
-			}
-
-			inConfigSpace := (cSpace.XMin < w.X && w.X < cSpace.XMax) && (cSpace.YMin < w.Y && w.Y < cSpace.YMax)
-			if !inConfigSpace {
-				return false
-			}
-
-			// https://stackoverflow.com/a/1079478/7035436
-			b := &vec2.T{o.X - v.X, o.Y - v.Y}
-			theta := vec2.Angle(a, b)
-			lengthC := b.Length() * math.Cos(theta)
-			c := aNorm
-			c.Scale(lengthC)
-			d := c
-			d.Sub(b)
-
-			if d.Length() < o.R && c.Length() < a.Length() {
-				return false
-			}
-
-			if c.Length() < a.Length() {
-				e := *a
-				e.Sub(b)
-
-				if e.Length() < o.R {
-					return false
-				}
-			}
-
-		}
-		return true
-	}
-}
 
 // Edge define an edge between two vertices.
 type Edge struct {
@@ -167,7 +66,7 @@ func RRT(obstacles []Circle, prob Problem, cSpace ConfigSpace, safe SafeFunc, se
 func randomSample(c ConfigSpace) *Vertex {
 	x := c.XMin + rand.Float64()*(c.XMax-c.XMin)
 	y := c.YMin + rand.Float64()*(c.YMax-c.YMin)
-	return newVertex(x, y, nil)
+	return newVertex(x, y, 0, nil)
 }
 
 // distance returns the cartesian distance between two vertices.
@@ -203,7 +102,8 @@ func smallDistanceAlong(u, v *Vertex, epsilon float64, smallSteps bool) *Vertex 
 	wVec := u2vNorm.Scale(epsilon)
 	x := u.X + wVec[0]
 	y := u.Y + wVec[1]
-	return newVertex(x, y, u)
+	theta := wVec.Angle()
+	return newVertex(x, y, theta, u)
 }
 
 // newEdge return a new edge from two vertices.
@@ -215,13 +115,13 @@ func newEdge(tail, head *Vertex) Edge {
 }
 
 // newVertex return a new parentless vertex.
-func newVertex(x, y float64, parent *Vertex) *Vertex {
-	return &Vertex{Point{x, y}, parent}
+func newVertex(x, y, theta float64, parent *Vertex) *Vertex {
+	return &Vertex{Point{X: x, Y: y, Theta: theta}, parent}
 }
 
 // near returns true if vertex u is within circle goal.
 func near(u *Vertex, goal Circle) bool {
-	d := distance(u, newVertex(goal.X, goal.Y, nil))
+	d := distance(u, newVertex(goal.X, goal.Y, 0, nil))
 	return d < goal.R
 }
 

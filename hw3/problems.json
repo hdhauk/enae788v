@@ -1,5 +1,6 @@
 {
-    "obstacles": "obstacles.txt",
+    "obstacles": "obstaclesH3.txt",
+    "robot_path": "H3_robot.txt",
     "config_space": {
         "x_min": 0,
         "x_max": 100,
@@ -8,85 +9,70 @@
     },
     "problems": [
         {
+            "name": "Problem 1",
             "start": {
-                "x": 75,
-                "y": 85
+                "x": 80,
+                "y": 60,
+                "theta": 3.14
             },
             "goal_region": {
-                "x": 100,
+                "x": 0,
                 "y": 0,
+                "r": 20
+            },
+            "epsilon": 5
+        },
+        {
+            "name": "Problem 2",
+            "start": {
+                "x": 5,
+                "y": 60,
+                "theta": 0
+            },
+            "goal_region": {
+                "x": 10,
+                "y": 60,
                 "r": 20
             },
             "epsilon": 10
         },
         {
+            "name": "Problem 3",
             "start": {
-                "x": 20,
-                "y": 10
+                "x": 10,
+                "y": 90,
+                "theta": 4.7123
             },
             "goal_region": {
-                "x": 75,
-                "y": 85,
+                "x": 100,
+                "y": 90,
                 "r": 10
             },
             "epsilon": 5
         },
         {
+            "name": "Problem 4",
             "start": {
-                "x": 60,
-                "y": 60
-            },
-            "goal_region": {
-                "x": 90,
-                "y": 100,
-                "r": 20
-            },
-            "epsilon": 5
-        },
-        {
-            "start": {
-                "x": 60,
-                "y": 80
+                "x": 63,
+                "y": 80,
+                "theta": 1.5707
             },
             "goal_region": {
                 "x": 60,
-                "y": 60,
-                "r": 5
-            },
-            "epsilon": 5
-        },
-        {
-            "start": {
-                "x": 1,
-                "y": 99
-            },
-            "goal_region": {
-                "x": 100,
-                "y": 0,
-                "r": 20
-            },
-            "epsilon": 1
-        },
-        {
-            "start": {
-                "x": 60,
-                "y": 60
-            },
-            "goal_region": {
-                "x": 75,
-                "y": 85,
+                "y": 10,
                 "r": 10
             },
-            "epsilon": 13,
-            "allow_steps_smaller_than_epsilon": true
+            "epsilon": 10
         },
         {
+            "name": "Problem 5",
             "start": {
-                "x": 1,
-                "y": 99
+                "x": 40,
+                "y": 40,
+                "theta": 0.7853
             },
             "goal_region": {
-                "x": 100,
+                "x": 0,
                 "y": 0,
                 "r": 20
             },
