@@ -116,7 +116,7 @@ for o in obstacles:
 
 # Tree
 for v in tree:
-    plt.plot(v[0], v[1], color='k', marker='o')
+    plt.plot(v[0], v[1], color='k', marker='', markersize=1)
 
 # Path
 robot_path = [
@@ -166,13 +166,8 @@ for p in path:
     y = p[1]
     for r in robot_path:
         point = rotate((0, 0), r, p[2])
-        plt.scatter(x[0]+point[0], y[0]+point[1], marker='o', color='r')
-# for r in robot_path:
-#     plt.scatter(r[0], r[1], marker='o', color='r')
-
-# for p in [(10, 10), (20, 20), (30, 30)]:
-#     for r in robot_path:
-#         plt.scatter(p[0]+r[0], p[1]+r[1], marker='o', color='r')
+        plt.scatter(x[0]+point[0], y[0]+point[1],
+                    marker='o', color='r', s=5, zorder=11)
 
 
 plt.grid()

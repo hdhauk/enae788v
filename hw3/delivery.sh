@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rm -r delivery
-rm hw2.zip
+rm hw3.zip
 
 go build -o rrt .
 for number in {0..4}; do
@@ -25,7 +25,8 @@ cp *.md delivery/
 
 GOARCH=amd64 GOOS=linux go build -o delivery/bin/rrt_linux_amd64
 
-zip -r hw2.zip delivery
-mv delivery /Users/hdhauk/gdrive/8-semester-V2018/enae788v-motion-planning-for-autonomous-systems/homework/
+zip -r hw3.zip delivery
+mv delivery /Users/hdhauk/gdrive/8-semester-V2018/enae788v-motion-planning-for-autonomous-systems/homework/hw3
+mv hw3.zip delivery /Users/hdhauk/gdrive/8-semester-V2018/enae788v-motion-planning-for-autonomous-systems/homework/
 
 exit 0
