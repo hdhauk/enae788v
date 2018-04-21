@@ -162,12 +162,13 @@ robot_path = [
 #     plt.scatter(p[0], p[1], marker='o', color='r')
 
 for p in path:
-    x = p[0]
-    y = p[1]
-    for r in robot_path:
-        point = rotate((0, 0), r, p[2])
-        plt.scatter(x[0]+point[0], y[0]+point[1],
-                    marker='o', color='r', s=5, zorder=11)
+    plt.plot(p[0], p[1], color='r', marker='o')
+    # x = p[0]
+    # y = p[1]
+    # for r in robot_path:
+    #     point = rotate((0, 0), r, p[2])
+    #     plt.scatter(x[0]+point[0], y[0]+point[1],
+    #                 marker='o', color='r', s=5, zorder=11)
 
 
 plt.grid()

@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+/*
 func TestRobotPointToGlobal(t *testing.T) {
 
 	var tests = []struct {
@@ -81,7 +82,7 @@ func TestPointsAlongPath(t *testing.T) {
 	}
 
 }
-
+*/
 func TestAngleDiff(t *testing.T) {
 	var tests = []struct {
 		name     string

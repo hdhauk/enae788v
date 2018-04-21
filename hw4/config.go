@@ -20,26 +20,30 @@ func (c Circle) String() string {
 	return fmt.Sprintf("(%.2f, %.2f, r=%.2f)", c.X, c.Y, c.R)
 }
 
-// Point is a point in 2D space with an optional direction angle associated with it.
-type Point struct {
-	X, Y, Theta float64
-}
-
 // Problem defines a specific path planning problem with a given config space.
 type Problem struct {
 	Name            string
 	Start           Point
 	Goal            Circle `json:"goal_region"`
 	Epsilon         float64
+	Delta           float64
 	AllowSmallSteps bool `json:"allow_steps_smaller_than_epsilon"`
 }
 
 // ConfigSpace should be renamed to workspace....
 type ConfigSpace struct {
-	XMin float64 `json:"x_min"`
-	XMax float64 `json:"x_max"`
-	YMin float64 `json:"y_min"`
-	YMax float64 `json:"y_max"`
+	XMin     float64 `json:"x_min"`
+	XMax     float64 `json:"x_max"`
+	YMin     float64 `json:"y_min"`
+	YMax     float64 `json:"y_max"`
+	VMax     float64 `json:"v_max"`
+	VMin     float64 `json:"v_min"`
+	WMax     float64 `json:"w_max"`
+	WMin     float64 `json:"w_min"`
+	AMax     float64 `json:"a_max"`
+	AMin     float64 `json:"a_min"`
+	GammaMax float64 `json:"gamma_max"`
+	GammaMin float64 `json:"gamma_min"`
 }
 
 // Config is the go struct equivalent of the .json file describing the problems.
