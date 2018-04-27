@@ -55,7 +55,7 @@ type Config struct {
 }
 
 // Robot is simply a set of points defining the edges of the robot.
-type Robot []Point
+type Robot []PathPoint
 
 func parseConfig(reader io.Reader) (*Config, error) {
 	var c Config
@@ -101,7 +101,7 @@ func readRobot(reader io.Reader) (Robot, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "non-float value in csv")
 		}
-		bot = append(bot, Point{X: x, Y: y})
+		bot = append(bot, PathPoint{x: x, y: y})
 	}
 	return bot, nil
 }

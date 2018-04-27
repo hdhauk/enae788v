@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-
-	"github.com/ungerik/go3d/float64/vec2"
 )
 
+var timestep = 0.1
+
 // SafeFunc takes to points and return true if the the edge is safe.
-type SafeFunc func(*Point) bool
+type SafeFunc func(*PathPoint) bool
 
 // Edge define an edge between two vertices.
 type Edge struct {
 	head, tail *Vertex
-	path       []*Point
+	path       []*PathPoint
 }
 
 func (e *Edge) String() string {
 	return fmt.Sprintf("edge(head:0x%x, tail:0x%x, len(path)=%d)", &e.head, &e.tail, len(e.path))
+}
+
+type PathPoint struct {
+	x, y, θ, v, w, a, γ float64
 }
 
 // Point is a point in 2D space with an optional direction angle associated with it.
@@ -50,7 +54,7 @@ func (v *Vertex) LinkParent(parent *Vertex) {
 }
 
 // RRT build a tree and find a feasible path using the RRT algorithm.
-func RRT(obstacles []Circle, prob Problem, cSpace *ConfigSpace, safe SafeFunc, seed int64) (path []*Point, tree []*Edge, err error) {
+func RRT(obstacles []Circle, prob Problem, cSpace *ConfigSpace, safe SafeFunc, seed int64) (path []*PathPoint, tree []*Edge, err error) {
 	rand.Seed(seed)
 	vertices := []*Vertex{&Vertex{Point: prob.Start, Parent: nil}}
 	edges := []*Edge{}
@@ -76,11 +80,6 @@ func RRT(obstacles []Circle, prob Problem, cSpace *ConfigSpace, safe SafeFunc, s
 		}
 	}
 	vertexInGoal := w
-
-	// for i, p := range vertices[40].Edge2Parent.path {
-	// 	fmt.Printf("#%d (%.1f,%.1f)\n", i, p.X, p.Y)
-
-	// }
 
 	path = backtrack(vertexInGoal, &prob.Start, edges)
 
@@ -119,24 +118,6 @@ func closestMember(vertices []*Vertex, u *Vertex) *Vertex {
 	return closest
 }
 
-// deprecated... use forwardSim
-func smallDistanceAlong(u, v *Vertex, epsilon float64, smallSteps bool) *Vertex {
-	u2v := vec2.T{v.X - u.X, v.Y - u.Y}
-
-	if smallSteps && u2v.Length() < epsilon {
-		return v
-	}
-
-	u2vNorm := u2v.Normalize()
-	wVec := u2vNorm.Scale(epsilon)
-	x := u.X + wVec[0]
-	y := u.Y + wVec[1]
-	// theta := wVec.Angle()
-	theta := v.Theta
-
-	return newVertex(x, y, theta, 0, 0, u)
-}
-
 // newEdge return a new edge from two vertices.
 func newEdge(tail, head *Vertex) Edge {
 	return Edge{
@@ -157,55 +138,33 @@ func near(u *Vertex, goal Circle) bool {
 }
 
 // backtrack generate a slice of edges from a leaf vertex to the root of the tree.
-func backtrack(inGoal *Vertex, start *Point, edges []*Edge) []*Point {
+func backtrack(inGoal *Vertex, start *Point, edges []*Edge) []*PathPoint {
 	current := inGoal
-	path := []*Point{}
+	path := []*PathPoint{}
 	i := 0
 	for current.Parent != nil {
 		path = append(current.Edge2Parent.path, path...)
-		// fmt.Println(current.Edge2Parent)
 		current = current.Parent
 		i++
-		// if i == 2 {
-		// 	break
-		// }
 	}
-	// fmt.Println(path)
-	//path = append(path, start)
 	return path
 }
 
 // forwardSim forward simulate a trajectory toward u using ½-car like model
 func forwardSim(v, u *Vertex, epsilon, delta float64, safe SafeFunc, cspace *ConfigSpace) (*Vertex, *Edge, bool) {
-	// determine how far to go
-	// * epsilon
 
-	// determine how long we'll drive
-	// * time = epsilon distance / "avg speed"
-	// * "avg speed" = v_end - v_start /2
 	changeInLinVelocity := u.V - v.V
 	changeInAngVelocity := u.W - v.W
 	avgSpeed := v.V + changeInLinVelocity/2
 	timeToTravelEpsilon := clamp(epsilon/avgSpeed, 1, 10)
 
-	// determine timestep t
-	// * t = delta/"avg speed"
-	//t := math.Abs(delta / avgSpeed)
-
 	// determine acceleration
-	// * a     = changeInLinVelocity / timeToTravelEpsilon
 	a := clamp(changeInLinVelocity/timeToTravelEpsilon, cspace.AMin, cspace.AMax)
-	// * gamma = changeInAngVelocity / timeToTravelEpsilon
 	gamma := clamp(changeInAngVelocity/timeToTravelEpsilon, cspace.GammaMin, cspace.GammaMax)
 
-	h := 0.1
-	// fmt.Printf("timeToTravelEpsilon = %.3f\n", timeToTravelEpsilon)
-	// fmt.Printf("a = %.3f\n", a)
-	// fmt.Printf("gamma = %.3f\n", gamma)
-	//x, y, theta, vel, w := u.X, u.Y, u.Theta, u.V, u.W
+	h := timestep // global variable. also used for printing...
 	X := Point{v.X, v.Y, v.Theta, v.V, v.W}
-	// path := []*Point{&X}
-	path := []*Point{}
+	path := []*PathPoint{}
 	var i float64
 	for i = 0.0; i*h < timeToTravelEpsilon; i++ {
 		next := euler(X, h, a, gamma)
@@ -214,7 +173,7 @@ func forwardSim(v, u *Vertex, epsilon, delta float64, safe SafeFunc, cspace *Con
 			return nil, nil, false
 		}
 		path = append(path, &next)
-		X = next
+		X = Point{next.x, next.y, next.θ, next.v, next.w}
 	}
 
 	head := Vertex{Point: X, Parent: v}
@@ -226,13 +185,13 @@ type stateSpace struct {
 	x, y, theta, v, w float64
 }
 
-func euler(X Point, h, a, gamma float64) Point {
+func euler(X Point, h, a, gamma float64) PathPoint {
 	x := X.X + h*(X.V*math.Cos(X.Theta))
 	y := X.Y + h*(X.V*math.Sin(X.Theta))
 	theta := X.Theta + h*X.W
 	v := X.V + h*a
 	w := X.W + h*gamma
-	return Point{x, y, theta, v, w}
+	return PathPoint{x, y, theta, v, w, a, gamma}
 
 }
 

@@ -3,14 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
+
+	"github.com/pkg/profile"
 
 	"github.com/ungerik/go3d/float64/vec2"
 )
 
 func main() {
+	defer profile.Start(profile.ProfilePath(".")).Stop()
+
 	configPath := flag.String("c", "problems.json", "config file")
 	pIndex := flag.Int("p", 0, "which problem in config file to solve (0-indexed)")
 	flag.Parse()
@@ -67,28 +72,39 @@ func main() {
 	// printing
 	fmt.Printf("start=[%.4f,%.4f] goal=[%.4f,%.4f,%.4f]\n\n", p.Start.X, p.Start.Y, p.Goal.X, p.Goal.Y, p.Goal.R)
 	_, _ = path, tree
-	printPath(path)
+
+	// create output file for delivery
+	f, err := os.OpenFile(fmt.Sprintf("problem%d_state.csv", *pIndex), os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		log.Println(err)
+	}
+
+	printPath(path, f)
 	printTree(tree)
 
 }
 
-func printPath(path []*Point) {
-	// for i, p := range path {
-	// 	fmt.Printf("#%d (%.1f,%.1f)\n", i, p.X, p.Y)
-
-	// }
-
+func printPath(path []*PathPoint, w io.WriteCloser) {
 	fmt.Println("START_PATH")
-	var head, tail *Point
+	var head, tail *PathPoint
 	for i := len(path) - 1; i > 0; i-- {
 		head = path[i]
 		tail = path[i-1]
 		fmt.Printf("%.4f, %.4f, %.4f, %.4f, %.4f\n",
-			head.X, head.Y, tail.X, tail.Y, head.Theta)
-	}
+			head.x, head.y, tail.x, tail.y, head.θ)
 
+		// 			    t_i,  x_i, y_i, θ_i, v_i, w_i, a_i, γ_i
+	}
 	fmt.Println("END_PATH")
 	fmt.Println()
+
+	// create csv file
+	for i := 0; i < len(path); i++ {
+		head = path[i]
+		fmt.Fprintf(w, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+			float64(i)*timestep, head.x, head.y, head.θ, head.v, head.v, head.a, head.γ)
+
+	}
 }
 
 func printTree(tree []*Edge) {
@@ -100,26 +116,22 @@ func printTree(tree []*Edge) {
 }
 
 func getSafeFunc(obstacles []Circle, cSpace ConfigSpace, bot Robot) SafeFunc {
-	// fmt.Printf("xmin:%.2f, xmax:%.2f\n", cSpace.XMin, cSpace.XMax)
-	// fmt.Printf("ymin:%.2f, ymax:%.2f\n", cSpace.YMin, cSpace.YMax)
-	// fmt.Printf("vmin:%.2f, vmax:%.2f\n", cSpace.VMin, cSpace.VMax)
-	// fmt.Printf("wmin:%.2f, wmax:%.2f\n", cSpace.WMin, cSpace.WMax)
-	legalPoint := func(p *Point) bool {
-		inConfigSpace := (cSpace.XMin < p.X && p.X < cSpace.XMax) && (cSpace.YMin < p.Y && p.Y < cSpace.YMax)
-		legalVelocities := (cSpace.VMin < p.V && p.V < cSpace.VMax) && (cSpace.WMin < p.W && p.W < cSpace.WMax)
+	legalPoint := func(p *PathPoint) bool {
+		inConfigSpace := (cSpace.XMin < p.x && p.x < cSpace.XMax) && (cSpace.YMin < p.y && p.y < cSpace.YMax)
+		legalVelocities := (cSpace.VMin < p.v && p.v < cSpace.VMax) && (cSpace.WMin < p.w && p.w < cSpace.WMax)
 		if !inConfigSpace || !legalVelocities {
 			return false
 		}
 
 		for _, circle := range obstacles {
-			if near(newVertex(p.X, p.Y, 0, 0, 0, nil), circle) {
+			if near(newVertex(p.x, p.y, 0, 0, 0, nil), circle) {
 				return false
 			}
 		}
 		return true
 	}
 
-	return func(p *Point) bool {
+	return func(p *PathPoint) bool {
 		for _, robotPoint := range bot {
 			globalPoint := robotPointGlobal(p, &robotPoint)
 			if !legalPoint(globalPoint) {
@@ -130,16 +142,16 @@ func getSafeFunc(obstacles []Circle, cSpace ConfigSpace, bot Robot) SafeFunc {
 	}
 }
 
-func robotPointGlobal(base, offset *Point) *Point {
-	b := vec2.T{offset.X, offset.Y}
-	b.Rotate(base.Theta)
-	a := vec2.T{base.X, base.Y}
+func robotPointGlobal(base, offset *PathPoint) *PathPoint {
+	b := vec2.T{offset.x, offset.y}
+	b.Rotate(base.θ)
+	a := vec2.T{base.x, base.y}
 	c := a.Add(&b)
 
-	return &Point{c[0], c[1], 0, 0, 0}
+	return &PathPoint{x: c[0], y: c[1], θ: 0, v: 0, w: 0}
 }
 
-// deprecated
+// deprecated in hw4
 func getPointsAlongPath(start, end Point, epsilon float64) []Point {
 	a := vec2.T{start.X, start.Y}
 	b := vec2.T{end.X, end.Y}
